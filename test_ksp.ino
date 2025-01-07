@@ -74,38 +74,48 @@
 #include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
 
 // Constants for control pins
-const int THROTTLE_PIN = A0;
-const int PITCH_PIN = A1;
-const int ROLL_PIN = A2;
-const int YAW_PIN = A3;
-const int TRANSLATE_PITCH_PIN = A4;
+const int PITCH_PIN = A0;
+const int ROLL_PIN = A1;
+const int YAW_PIN = A2;
+const int TRANSLATE_PITCH_PIN = A3;
+const int TRANSLATE_ROLL_PIN = A4;
 const int TRANSLATE_YAW_PIN = A5;
-const int TRANSLATE_ROLL_PIN = A6;
-
-const int SAS_POT_PIN = A8;
+const int THROTTLE_PIN = A6;
+const int SAS_POT_PIN = A7;
 
 // Switches
-const int NUM_OF_SWITCHES = 1;
+const int NUM_OF_SWITCHES = 5;
 const int SWITCH_PIN[NUM_OF_SWITCHES] = {
-  34 // SAS 
+  32, // SAS
+  33, // RCS
+  34, // Brakes
+  35, // Gears
+  36, // Lights
 };
 
 // Buttons
-const int NUM_OF_BUTTONS = 11;
+const int NUM_OF_BUTTONS = 16;
 const int BUTTON_PIN[NUM_OF_BUTTONS] = {
-  // Metal buttons
-  30, // Stage
-  31, // Camera Mode
-  33, // Control Mode
-  32, // Map
-  35, // Switch
-  // Plastic buttons
-  42, // Timewarp Plus
-  43, // Timewarp Minus
-  44, // Timewarp Apo
-  45, // Timewarp Peri
+  // 6 Timewarp
+  45, // Timewarp Plus
+  49, // Timewarp Minus
+  46, // Timewarp Apo
+  48, // Timewarp Peri
   47, // Timewarp Maneuver
-  46, // Timewarp Reset
+  50, // Timewarp Reset
+  // 8 Control
+  37, // Switch
+  38, // Pause
+  39, // Q Save
+  40, // Q Load
+  41, // Stage
+  42, // Map
+  43, // Control mode
+  44, // Camera mode
+  // 2 Display control
+  51, // Next Display
+  52, // Prev Display
+  // 10 Action Group
 };
 
 // Key codes for Camera control in KSP
@@ -136,6 +146,7 @@ const int R_KEY = 0x52;
 const int LSHIFT_KEY = 0xA0;
 const int LCTRL_KEY = 0xA2;
 const int SPACE_KEY = 0x20;
+const int ESC_KEY = 0x1B;
 const int B_KEY = 0x42;
 const int F_KEY = 0x46;
 const int C_KEY = 0x43;
@@ -617,13 +628,13 @@ namespace buttonsFunctions {
   void mapFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("Map button pressed", PRINT_TO_SCREEN);
-      keyboardEmulatorMessage MapMsg(MAP_KEY, KEY_DOWN_MOD);
+      keyboardEmulatorMessage msg(MAP_KEY, KEY_DOWN_MOD);
       key_pressed[MAP_KEY] = true;
-      mySimpit.send(KEYBOARD_EMULATOR, MapMsg);
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage MapMsg(MAP_KEY, KEY_UP_MOD);
+    keyboardEmulatorMessage msg(MAP_KEY, KEY_UP_MOD);
     key_pressed[MAP_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, MapMsg);
+    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void switchFunc(int reading) {
@@ -636,6 +647,18 @@ namespace buttonsFunctions {
     keyboardEmulatorMessage ShipsMsg(SHIPS_KEY, KEY_UP_MOD);
     key_pressed[SHIPS_KEY] = true;
     mySimpit.send(KEYBOARD_EMULATOR, ShipsMsg);
+  }
+
+  void pauseFunc(int reading) {
+    if (reading == HIGH) {
+      mySimpit.printToKSP("Esc button pressed", PRINT_TO_SCREEN);
+      keyboardEmulatorMessage msg(ESC_KEY, KEY_DOWN_MOD);
+      key_pressed[ESC_KEY] = true;
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
+    }
+    keyboardEmulatorMessage msg(ESC_KEY, KEY_UP_MOD);
+    key_pressed[ESC_KEY] = false;
+    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void timewarpPlusFunc(int reading) {
@@ -871,18 +894,23 @@ void handleButtons(unsigned long now) {
     buttonReading[i] = digitalRead(BUTTON_PIN[i]);
   }
   // Select functions for each button according to the control mode
-  void (*buttonFunction[])(int) = {
-        buttonsFunctions::stageFunc,
-        buttonsFunctions::cameraModeFunc,
-        buttonsFunctions::controlModeFunc,
-        buttonsFunctions::mapFunc,
-        buttonsFunctions::switchFunc,
+  void (*buttonFunction[NUM_OF_BUTTONS])(int) = {
         buttonsFunctions::timewarpPlusFunc,
         buttonsFunctions::timewarpMinusFunc,
         buttonsFunctions::timewarpApoFunc,
-        buttonsFunctions::nextDisplayFunc,
+        buttonsFunctions::timewarpPeriFunc,
         buttonsFunctions::timewarpManeuverFunc,
-        buttonsFunctions::prevDisplayFunc
+        buttonsFunctions::timewarpResetFunc,
+        buttonsFunctions::switchFunc,
+        buttonsFunctions::pauseFunc,
+        buttonsFunctions::qSaveFunc,
+        buttonsFunctions::qLoadFunc,
+        buttonsFunctions::stageFunc,
+        buttonsFunctions::mapFunc,
+        buttonsFunctions::controlModeFunc,
+        buttonsFunctions::cameraModeFunc,
+        buttonsFunctions::nextDisplayFunc,
+        buttonsFunctions::prevDisplayFunc,
       };
 
   // Rebind functions if in different control mode
@@ -910,8 +938,12 @@ void handleSwitches(unsigned long now) {
   for(int i = 0; i < NUM_OF_SWITCHES; i++) {
     switchReading[i] = digitalRead(SWITCH_PIN[i]);
   }
-  void (*switchFunction[])(int) = {
-    switchFunctions::sasFunc
+  void (*switchFunction[NUM_OF_SWITCHES])(int) = {
+    switchFunctions::sasFunc,
+    switchFunctions::rcsFunc,
+    switchFunctions::brakesFunc,
+    switchFunctions::gearsFunc,
+    switchFunctions::lightsFunc,
   };
 
   for(int i = 0; i < NUM_OF_SWITCHES; i++) {
