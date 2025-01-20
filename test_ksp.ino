@@ -1495,7 +1495,7 @@ void setup() {
 
   // Set pin modes
   for(int i = 0; i < NUM_OF_SWITCHES; i++) {
-    pinMode(SWITCH_PIN[i], INPUT_PULLUP);
+    pinMode(SWITCH_PIN[i], INPUT);
   }
   for(int i = 0; i < NUM_OF_BUTTONS; i++) {
     pinMode(BUTTON_PIN[i], INPUT_PULLUP);

@@ -24,9 +24,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.53795866"
-     inkscape:cx="724.96277"
-     inkscape:cy="269.53744"
+     inkscape:zoom="0.38039422"
+     inkscape:cx="507.36839"
+     inkscape:cy="36.803924"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="1072"
@@ -49,7 +49,10 @@
     <path
        style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
        d="M 5e-7,6.5e-6 V 218.64001"
-       id="path238" />
+       id="path238"
+       inkscape:export-filename="path238.svg"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
     <circle
        id="path6427"
        style="fill:#000000;stroke:none;stroke-width:0;stroke-dasharray:none"
@@ -93,17 +96,25 @@
        d="M 14.999999,-138.64 H 395"
        id="path8070-5" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:2.40000004,2.40000004;stroke-dashoffset:0"
-       d="M 0,-123.63999 H 410"
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="m 400,-123.63999 h 10"
        id="path8165" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:2.40000004,2.40000004;stroke-dashoffset:0"
-       d="M 0,6.5e-6 H 410"
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="m 400,6.5e-6 h 10"
        id="path8165-1" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:2.40000004,2.40000004;stroke-dashoffset:0"
-       d="M 0,218.64001 H 410"
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="M 0,0 H 10"
+       id="path8165-1-9" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="m 400,218.64001 h 10"
        id="path8165-1-5" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="M 0,218.64 H 10"
+       id="path8165-1-5-6" />
     <ellipse
        style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
        id="path8263"
@@ -244,5 +255,9 @@
        cy="24.999994"
        rx="1.5000002"
        ry="1.4999999" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="M 0,-123.64 H 10"
+       id="path8165-4" />
   </g>
 </svg>

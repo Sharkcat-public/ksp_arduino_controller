@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="414.30002mm"
+   width="414.10001mm"
    height="305.09998mm"
-   viewBox="0 0 414.30002 305.09998"
+   viewBox="0 0 414.10001 305.09998"
    version="1.1"
    id="svg198"
    xmlns="http://www.w3.org/2000/svg"
@@ -191,11 +191,11 @@
        cy="75"
        r="3.3499994" />
     <circle
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
+       style="fill:none;stroke:#000000;stroke-width:0.102298;stroke-dasharray:none"
        id="path2231"
        cx="359.25"
        cy="55"
-       r="4.2999997" />
+       r="4.3988509" />
     <ellipse
        style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
        id="path2833"
@@ -204,11 +204,11 @@
        rx="1.4"
        ry="1.3999997" />
     <circle
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
+       style="fill:none;stroke:#000000;stroke-width:0.109615;stroke-dasharray:none"
        id="path2234"
        cx="359.25"
        cy="90"
-       r="5.4693069" />
+       r="5.9951925" />
     <circle
        style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
        id="path2234-9-64-2"
@@ -427,16 +427,28 @@
      style="display:inline"
      transform="translate(0.0499995,0.04999944)">
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:2.4, 2.4;stroke-dashoffset:0"
-       d="M 414.25,30 H 0.24999985"
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.2, 1.2;stroke-dashoffset:0"
+       d="M 414,30 H 404"
        id="path2496" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:2.4, 2.4;stroke-dashoffset:0"
-       d="M 414.25,120 H 0.24999985"
+       style="display:inline;fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.2, 1.2;stroke-dashoffset:0"
+       d="M 10,30 H 0"
+       id="path2496-31" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.2, 1.2;stroke-dashoffset:0"
+       d="M 414,120 H 404"
        id="path2496-3" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:2.4, 2.4;stroke-dashoffset:0"
-       d="M 414.25,245 H 0.24999985"
+       style="display:inline;fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.2, 1.2;stroke-dashoffset:0"
+       d="M 10,120 H 0"
+       id="path2496-3-9" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.2, 1.2;stroke-dashoffset:0"
+       d="M 414,245 H 404"
        id="path2496-6" />
+    <path
+       style="display:inline;fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.2, 1.2;stroke-dashoffset:0"
+       d="M 10,245 H 0"
+       id="path2496-6-0" />
   </g>
 </svg>

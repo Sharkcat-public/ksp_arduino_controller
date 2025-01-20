@@ -25,14 +25,14 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="0.5"
-     inkscape:cx="869"
-     inkscape:cy="504"
+     inkscape:cx="816"
+     inkscape:cy="706"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="1072"
      inkscape:window-y="421"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer12" />
+     inkscape:current-layer="layer10" />
   <defs
      id="defs195">
     <inkscape:perspective
@@ -227,11 +227,11 @@
        cy="75"
        r="3.3499994" />
     <circle
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
+       style="fill:none;stroke:#000000;stroke-width:0.102298;stroke-dasharray:none"
        id="path2231"
        cx="359.25"
        cy="55"
-       r="4.2999997" />
+       r="4.3988509" />
     <ellipse
        style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
        id="path2833"
@@ -240,11 +240,11 @@
        rx="1.4"
        ry="1.3999997" />
     <circle
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
+       style="fill:none;stroke:#000000;stroke-width:0.109615;stroke-dasharray:none"
        id="path2234"
        cx="359.25"
        cy="90"
-       r="5.4693069" />
+       r="5.9951925" />
     <circle
        style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:none"
        id="path2234-9-64-2"
@@ -467,16 +467,28 @@
      inkscape:label="Top plate folds"
      style="display:inline">
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:2.40000004,2.40000004;stroke-dashoffset:0"
-       d="M 414.25,30 H 0.24999985"
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="M 414,30 H 404"
        id="path2496" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:2.40000004,2.40000004;stroke-dashoffset:0"
-       d="M 414.25,120 H 0.24999985"
+       style="display:inline;fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="M 10,30 H 0"
+       id="path2496-31" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="M 414,120 H 404"
        id="path2496-3" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:2.40000004,2.40000004;stroke-dashoffset:0"
-       d="M 414.25,245 H 0.24999985"
+       style="display:inline;fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="M 10,120 H 0"
+       id="path2496-3-9" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="M 414,245 H 404"
        id="path2496-6" />
+    <path
+       style="display:inline;fill:none;stroke:#000000;stroke-width:0.1;stroke-dasharray:1.20000002,1.20000002;stroke-dashoffset:0"
+       d="M 10,245 H 0"
+       id="path2496-6-0" />
   </g>
 </svg>
