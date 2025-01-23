@@ -86,36 +86,46 @@ const int SAS_POT_PIN = A7;
 // Switches
 const int NUM_OF_SWITCHES = 5;
 const int SWITCH_PIN[NUM_OF_SWITCHES] = {
-  32, // SAS
-  33, // RCS
-  34, // Brakes
-  35, // Gears
-  36, // Lights
+  46, // SAS
+  47, // RCS
+  48, // Lights
+  49, // Breaks
+  50, // Gears
 };
 
 // Buttons
-const int NUM_OF_BUTTONS = 16;
+const int NUM_OF_BUTTONS = 26;
 const int BUTTON_PIN[NUM_OF_BUTTONS] = {
-  // 6 Timewarp
-  45, // Timewarp Plus
-  49, // Timewarp Minus
-  46, // Timewarp Apo
-  48, // Timewarp Peri
-  47, // Timewarp Maneuver
-  50, // Timewarp Reset
   // 8 Control
-  37, // Switch
-  38, // Pause
-  39, // Q Save
-  40, // Q Load
-  41, // Stage
-  42, // Map
-  43, // Control mode
-  44, // Camera mode
+  22, // Stage
+  23, // Map
+  24, // Q Save
+  25, // Q Load
+  26, // Switch Vessel
+  27, // Camera mode
+  28, // Control mode
+  29, // Pause
+  // 6 Timewarp
+  30, // Timewarp Plus
+  31, // Timewarp Apo
+  32, // Timewarp Maneuver
+  33, // Timewarp Minus
+  34, // Timewarp Peri
+  35, // Timewarp Reset
+  // 10 Action Groups
+  36, // Action Group 1
+  37, // Action Group 2
+  38, // Action Group 3
+  39, // Action Group 4
+  40, // Action Group 5
+  41, // Action Group 6
+  42, // Action Group 7
+  43, // Action Group 8
+  44, // Action Group 9
+  45, // Action Group 10
   // 2 Display control
   51, // Next Display
   52, // Prev Display
-  // 10 Action Group
 };
 
 // Key codes for Camera control in KSP
@@ -895,31 +905,45 @@ void handleButtons(unsigned long now) {
   }
   // Select functions for each button according to the control mode
   void (*buttonFunction[NUM_OF_BUTTONS])(int) = {
-        buttonsFunctions::timewarpPlusFunc,
-        buttonsFunctions::timewarpMinusFunc,
-        buttonsFunctions::timewarpApoFunc,
-        buttonsFunctions::timewarpPeriFunc,
-        buttonsFunctions::timewarpManeuverFunc,
-        buttonsFunctions::timewarpResetFunc,
-        buttonsFunctions::switchFunc,
-        buttonsFunctions::pauseFunc,
-        buttonsFunctions::qSaveFunc,
-        buttonsFunctions::qLoadFunc,
+        
         buttonsFunctions::stageFunc,
         buttonsFunctions::mapFunc,
-        buttonsFunctions::controlModeFunc,
+        buttonsFunctions::qSaveFunc,
+        buttonsFunctions::qLoadFunc,
+        buttonsFunctions::switchFunc,
         buttonsFunctions::cameraModeFunc,
+        buttonsFunctions::controlModeFunc,
+        buttonsFunctions::pauseFunc,
+
+        buttonsFunctions::timewarpPlusFunc,
+        buttonsFunctions::timewarpApoFunc,
+        buttonsFunctions::timewarpManeuverFunc,
+        buttonsFunctions::timewarpMinusFunc,
+        buttonsFunctions::timewarpPeriFunc,
+        buttonsFunctions::timewarpResetFunc,
+
+        buttonsFunctions::actionG1Func,
+        buttonsFunctions::actionG2Func,
+        buttonsFunctions::actionG3Func,
+        buttonsFunctions::actionG4Func,
+        buttonsFunctions::actionG5Func,
+        buttonsFunctions::actionG6Func,
+        buttonsFunctions::actionG7Func,
+        buttonsFunctions::actionG8Func,
+        buttonsFunctions::actionG9Func,
+        buttonsFunctions::actionG10Func,
+        
         buttonsFunctions::nextDisplayFunc,
         buttonsFunctions::prevDisplayFunc,
       };
 
   // Rebind functions if in different control mode
   if (current_control_mode == EVA) {
-    buttonFunction[5] = buttonsFunctions::evaSprintFunc;
-    buttonFunction[6] = buttonsFunctions::evaJumpFunc;
-    buttonFunction[7] = buttonsFunctions::evaClimbFunc;
-    buttonFunction[8] = buttonsFunctions::evaIvaFunc;
-    buttonFunction[10] = buttonsFunctions::evaBoardFunc;
+    buttonFunction[14] = buttonsFunctions::evaSprintFunc;
+    buttonFunction[15] = buttonsFunctions::evaJumpFunc;
+    buttonFunction[16] = buttonsFunctions::evaClimbFunc;
+    buttonFunction[17] = buttonsFunctions::evaIvaFunc;
+    buttonFunction[18] = buttonsFunctions::evaBoardFunc;
   }
 
   // For each button check if pressed and call function from buttonFunction array
@@ -941,9 +965,9 @@ void handleSwitches(unsigned long now) {
   void (*switchFunction[NUM_OF_SWITCHES])(int) = {
     switchFunctions::sasFunc,
     switchFunctions::rcsFunc,
+    switchFunctions::lightsFunc,
     switchFunctions::brakesFunc,
     switchFunctions::gearsFunc,
-    switchFunctions::lightsFunc,
   };
 
   for(int i = 0; i < NUM_OF_SWITCHES; i++) {
