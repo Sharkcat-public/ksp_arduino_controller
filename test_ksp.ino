@@ -153,6 +153,7 @@ const int D_KEY = 0x44;
 const int Q_KEY = 0x51;
 const int E_KEY = 0x45;
 const int R_KEY = 0x52;
+const int I_KEY = 0x49;
 const int LSHIFT_KEY = 0xA0;
 const int LCTRL_KEY = 0xA2;
 const int SPACE_KEY = 0x20;
@@ -245,8 +246,8 @@ unsigned long lastDebounceTimeJoystickTranslation = 0;
 unsigned long lastDebounceTimeJoystickRotation = 0;
 
 // Variables to store the current and previous readings
-int lastButtonState[NUM_OF_BUTTONS];
-int lastSwitchState[NUM_OF_SWITCHES];
+int lastButtonState[NUM_OF_BUTTONS] = {0};
+int lastSwitchState[NUM_OF_SWITCHES] = {0};
 int lastSASModePotValue = 0;
 
 // Global variable declarations
@@ -264,9 +265,11 @@ maneuverMessage myManeuver;
 burnTimeMessage myBurnTime;
 
 // Constants
+const int TIMEWARP_ARRIVAL_TIME = -45;
 const unsigned long DEBOUNCE_DELAY = 50; // Debounce delay in milliseconds
 const unsigned int LCD_UPDATE_INTERVAL = 500;  // LCD update frequency
 const unsigned int DEADZONE = 50; // Deadzone for Rotation, Translation, Throttle
+const unsigned int THROTTLE_DEADZONE = 75; // Deadzone for Throttle
 const unsigned int CAMERA_DEADZONE = 100; // Deadzone for camera movement
 const unsigned int JETPACK_DEADZONE = 200; // Deadzone for jetpack throttle
 const int CAMERA_SENSITIVITY = 128; // When it was INT16_MAX, it was way too fast
@@ -281,12 +284,12 @@ void sendThrottleCmd() {
   throttleMessage throttleMsg;
   int reading = analogRead(THROTTLE_PIN);
 
-  if (reading + DEADZONE > 1023) {
+  if (reading + THROTTLE_DEADZONE > 1023) {
     throttleMsg.throttle = THROTTLE_SENSITIVITY;
-  } else if (reading - DEADZONE < 0) {
+  } else if (reading - THROTTLE_DEADZONE < 0) {
     throttleMsg.throttle = 0;
   } else {
-    throttleMsg.throttle = map(reading, 0 + DEADZONE, 1023 - DEADZONE, 0, THROTTLE_SENSITIVITY);
+    throttleMsg.throttle = map(reading, 0 + THROTTLE_DEADZONE, 1023 - THROTTLE_DEADZONE, 0, THROTTLE_SENSITIVITY);
   }
 
   // Send throttle message
@@ -294,7 +297,6 @@ void sendThrottleCmd() {
 }
 
 void sendJetpackCmd() {
-  //if (rcs_enabled)
   int reading = analogRead(THROTTLE_PIN);
 
   // Up
@@ -415,26 +417,26 @@ void sendMovementCmd() {
     key_pressed[A_KEY] = false;
   }
 
-  // Rotate right
-  if (readings[2] > (512 + DEADZONE) && !key_pressed[Q_KEY]) {
-    keyboardEmulatorMessage msg(Q_KEY, KEY_DOWN_MOD);
+  // Jetpack Up
+  if (readings[2] > (512 + DEADZONE) && !key_pressed[LSHIFT_KEY]) {
+    keyboardEmulatorMessage msg(LSHIFT_KEY, KEY_DOWN_MOD);
     mySimpit.send(KEYBOARD_EMULATOR, msg);
-    key_pressed[Q_KEY] = true;
-  } else if (readings[2] <= (512 + DEADZONE) && key_pressed[Q_KEY]) {
-    keyboardEmulatorMessage msg(Q_KEY, KEY_UP_MOD);
+    key_pressed[LSHIFT_KEY] = true;
+  } else if (readings[2] <= (512 + DEADZONE) && key_pressed[LSHIFT_KEY]) {
+    keyboardEmulatorMessage msg(LSHIFT_KEY, KEY_UP_MOD);
     mySimpit.send(KEYBOARD_EMULATOR, msg);
-    key_pressed[Q_KEY] = false;
+    key_pressed[LSHIFT_KEY] = false;
   }
 
-  // Rotate left
-  if (readings[2] < (512 - DEADZONE) && !key_pressed[E_KEY]) {
-    keyboardEmulatorMessage msg(E_KEY, KEY_DOWN_MOD);
+  // Jetpack Down
+  if (readings[2] < (512 - DEADZONE) && !key_pressed[LCTRL_KEY]) {
+    keyboardEmulatorMessage msg(LCTRL_KEY, KEY_DOWN_MOD);
     mySimpit.send(KEYBOARD_EMULATOR, msg);
-    key_pressed[E_KEY] = true;
-  } else if (readings[2] >= (512 - DEADZONE) && key_pressed[E_KEY]) {
-    keyboardEmulatorMessage msg(E_KEY, KEY_UP_MOD);
+    key_pressed[LCTRL_KEY] = true;
+  } else if (readings[2] >= (512 - DEADZONE) && key_pressed[LCTRL_KEY]) {
+    keyboardEmulatorMessage msg(LCTRL_KEY, KEY_UP_MOD);
     mySimpit.send(KEYBOARD_EMULATOR, msg);
-    key_pressed[E_KEY] = false;
+    key_pressed[LCTRL_KEY] = false;
   }  
 }
 
@@ -486,9 +488,9 @@ void sendTranslationCmd() {
 void sendWheelCmd() {
   // control rover by sending wheel and throttle message
   int readings[3] = {0,0,0};
-  readings[0] = analogRead(TRANSLATE_PITCH_PIN);
-  readings[1] = analogRead(TRANSLATE_YAW_PIN);
-  readings[2] = analogRead(TRANSLATE_ROLL_PIN);
+  readings[0] = analogRead(PITCH_PIN);
+  readings[1] = analogRead(YAW_PIN);
+  readings[2] = analogRead(ROLL_PIN);
   int16_t translations[3] = {0,0,0};
 
   for(int i = 0; i < 3; i++) {
@@ -625,7 +627,7 @@ namespace buttonsFunctions {
           mySimpit.printToKSP("EVA + CAMERA", PRINT_TO_SCREEN);
           break;
         case ROVER:
-          mySimpit.printToKSP("ROTATION + ROVER", PRINT_TO_SCREEN);
+          mySimpit.printToKSP("CAMERA + ROVER", PRINT_TO_SCREEN);
           break;
         case PLANE:
           ROTATION_SENSITIVITY = 8192;
@@ -638,37 +640,25 @@ namespace buttonsFunctions {
   void mapFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("Map button pressed", PRINT_TO_SCREEN);
-      keyboardEmulatorMessage msg(MAP_KEY, KEY_DOWN_MOD);
-      key_pressed[MAP_KEY] = true;
+      keyboardEmulatorMessage msg(MAP_KEY);
       mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage msg(MAP_KEY, KEY_UP_MOD);
-    key_pressed[MAP_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void switchFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("SwitchVessel button pressed", PRINT_TO_SCREEN);
-      keyboardEmulatorMessage ShipsMsg(SHIPS_KEY, KEY_DOWN_MOD);
-      key_pressed[SHIPS_KEY] = true;
-      mySimpit.send(KEYBOARD_EMULATOR, ShipsMsg);
+      keyboardEmulatorMessage msg(SHIPS_KEY);
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage ShipsMsg(SHIPS_KEY, KEY_UP_MOD);
-    key_pressed[SHIPS_KEY] = true;
-    mySimpit.send(KEYBOARD_EMULATOR, ShipsMsg);
   }
 
   void pauseFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("Esc button pressed", PRINT_TO_SCREEN);
-      keyboardEmulatorMessage msg(ESC_KEY, KEY_DOWN_MOD);
-      key_pressed[ESC_KEY] = true;
+      keyboardEmulatorMessage msg(ESC_KEY);
       mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage msg(ESC_KEY, KEY_UP_MOD);
-    key_pressed[ESC_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void timewarpPlusFunc(int reading) {
@@ -692,7 +682,7 @@ namespace buttonsFunctions {
   void timewarpApoFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("Timewarp Apoapsis button pressed", PRINT_TO_SCREEN);
-      timewarpToMessage twTo_msg(TIMEWARP_TO_APOAPSIS, -30);
+      timewarpToMessage twTo_msg(TIMEWARP_TO_APOAPSIS, TIMEWARP_ARRIVAL_TIME);
       mySimpit.send(TIMEWARP_TO_MESSAGE, twTo_msg);
     }
   }
@@ -700,7 +690,7 @@ namespace buttonsFunctions {
   void timewarpPeriFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("Timewarp Periapsis button pressed", PRINT_TO_SCREEN);
-      timewarpToMessage twTo_msg(TIMEWARP_TO_PERIAPSIS, -30);
+      timewarpToMessage twTo_msg(TIMEWARP_TO_PERIAPSIS, TIMEWARP_ARRIVAL_TIME);
       mySimpit.send(TIMEWARP_TO_MESSAGE, twTo_msg);
     }
   }
@@ -708,7 +698,7 @@ namespace buttonsFunctions {
   void timewarpManeuverFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("Timewarp Maneuver button pressed", PRINT_TO_SCREEN);
-      timewarpToMessage twTo_msg(TIMEWARP_TO_NEXT_MANEUVER, -30);
+      timewarpToMessage twTo_msg(TIMEWARP_TO_NEXT_MANEUVER, TIMEWARP_ARRIVAL_TIME);
       mySimpit.send(TIMEWARP_TO_MESSAGE, twTo_msg);
     }
   }
@@ -728,13 +718,9 @@ namespace buttonsFunctions {
   void qSaveFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("Quick Save button pressed", PRINT_TO_SCREEN);
-      keyboardEmulatorMessage msg(F5_KEY, KEY_DOWN_MOD);
-      key_pressed[F5_KEY] = true;
+      keyboardEmulatorMessage msg(F5_KEY);
       mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage msg(F5_KEY, KEY_UP_MOD);
-    key_pressed[F5_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void qLoadFunc(int reading) {
@@ -743,10 +729,11 @@ namespace buttonsFunctions {
       keyboardEmulatorMessage msg(F9_KEY, KEY_DOWN_MOD);
       key_pressed[F9_KEY] = true;
       mySimpit.send(KEYBOARD_EMULATOR, msg);
+    } else {
+      keyboardEmulatorMessage msg(F9_KEY, KEY_UP_MOD);
+      key_pressed[F9_KEY] = false;
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage msg(F9_KEY, KEY_UP_MOD);
-    key_pressed[F9_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void actionG1Func(int reading) {
@@ -825,10 +812,11 @@ namespace buttonsFunctions {
       keyboardEmulatorMessage msg(LSHIFT_KEY, KEY_DOWN_MOD);
       key_pressed[LSHIFT_KEY] = true;
       mySimpit.send(KEYBOARD_EMULATOR, msg);
+    } else {
+      keyboardEmulatorMessage msg(LSHIFT_KEY, KEY_UP_MOD);
+      key_pressed[LSHIFT_KEY] = false;
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage msg(LSHIFT_KEY, KEY_UP_MOD);
-    key_pressed[LSHIFT_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void evaJumpFunc(int reading) {
@@ -837,59 +825,99 @@ namespace buttonsFunctions {
       keyboardEmulatorMessage msg(SPACE_KEY, KEY_DOWN_MOD);
       key_pressed[SPACE_KEY] = true;
       mySimpit.send(KEYBOARD_EMULATOR, msg);
+    } else {
+      keyboardEmulatorMessage msg(SPACE_KEY, KEY_UP_MOD);
+      key_pressed[SPACE_KEY] = false;
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage msg(SPACE_KEY, KEY_UP_MOD);
-    key_pressed[SPACE_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void evaClimbFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("EVA Climb button pressed", PRINT_TO_SCREEN);
-      keyboardEmulatorMessage msg(F_KEY, KEY_DOWN_MOD);
-      key_pressed[F_KEY] = true;
+      keyboardEmulatorMessage msg(F_KEY);
       mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage msg(F_KEY, KEY_UP_MOD);
-    key_pressed[F_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void evaIvaFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("EVA IVA button pressed", PRINT_TO_SCREEN);
-      keyboardEmulatorMessage msg(C_KEY, KEY_DOWN_MOD);
-      key_pressed[C_KEY] = true;
+      keyboardEmulatorMessage msg(C_KEY);
       mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage msg(C_KEY, KEY_UP_MOD);
-    key_pressed[C_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, msg);
   }
 
   void evaBoardFunc(int reading) {
     if (reading == HIGH) {
       mySimpit.printToKSP("EVA board button pressed", PRINT_TO_SCREEN);
-      keyboardEmulatorMessage msg(B_KEY, KEY_DOWN_MOD);
-      key_pressed[B_KEY] = true;
+      keyboardEmulatorMessage msg(B_KEY);
       mySimpit.send(KEYBOARD_EMULATOR, msg);
     }
-    keyboardEmulatorMessage msg(B_KEY, KEY_UP_MOD);
-    key_pressed[B_KEY] = false;
-    mySimpit.send(KEYBOARD_EMULATOR, msg);
+  }
+
+  void evaRcsFunc(int reading) {
+    if (reading == HIGH) {
+      mySimpit.printToKSP("RCS button pressed", PRINT_TO_SCREEN);
+      keyboardEmulatorMessage msg(R_KEY);
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
+    }
+  }
+
+  void evaJetpackUp(int reading) {
+    if (reading == HIGH) {
+      mySimpit.printToKSP("EVA Jetpack Up", PRINT_TO_SCREEN);
+      keyboardEmulatorMessage msg(LSHIFT_KEY, KEY_DOWN_MOD);
+      key_pressed[LSHIFT_KEY] = true;
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
+    } else {
+      keyboardEmulatorMessage msg(LSHIFT_KEY, KEY_UP_MOD);
+      key_pressed[LSHIFT_KEY] = false;
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
+    }
+  }
+
+  void evaJetpackDown(int reading) {
+    if (reading == HIGH) {
+      mySimpit.printToKSP("EVA Jetpack Down", PRINT_TO_SCREEN);
+      keyboardEmulatorMessage msg(LCTRL_KEY, KEY_DOWN_MOD);
+      key_pressed[LCTRL_KEY] = true;
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
+    } else {
+      keyboardEmulatorMessage msg(LCTRL_KEY, KEY_UP_MOD);
+      key_pressed[LCTRL_KEY] = false;
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
+    }
+  }
+
+  void evaConstrFunc(int reading) {
+    if (reading == HIGH) {
+      mySimpit.printToKSP("Construction button pressed", PRINT_TO_SCREEN);
+      keyboardEmulatorMessage msg(I_KEY);
+      mySimpit.send(KEYBOARD_EMULATOR, msg);
+    }
   }
 
   void nextDisplayFunc(int reading) {
     if (reading == HIGH) {
+      char buffer[10];
+      itoa((current_display_mode + 1) % NUM_OF_DISPLAY_MODES, buffer, 10);
+      mySimpit.printToKSP(buffer, PRINT_TO_SCREEN);
       current_display_mode = (display_mode)((current_display_mode + 1) % NUM_OF_DISPLAY_MODES);
     }
   }
 
-  void prevDisplayFunc(int reading) {
+  void prevDisplayFunc(int reading) {    
     if (reading == HIGH) {
-      if (current_display_mode == 0) {
-        current_display_mode = (display_mode)(NUM_OF_DISPLAY_MODES - 1);
+      if (current_display_mode == (display_mode)(0)) {
+        char buffer[10];
+        itoa(NUM_OF_DISPLAY_MODES - 1, buffer, 10);
+        mySimpit.printToKSP(buffer, PRINT_TO_SCREEN);
+        current_display_mode = (display_mode)((NUM_OF_DISPLAY_MODES - 1) % NUM_OF_DISPLAY_MODES);
       } else {
+        char buffer[10];
+        itoa(current_display_mode - 1, buffer, 10);
+        mySimpit.printToKSP(buffer, PRINT_TO_SCREEN);
         current_display_mode = (display_mode)((current_display_mode - 1) % NUM_OF_DISPLAY_MODES);
       }
     }
@@ -940,10 +968,15 @@ void handleButtons(unsigned long now) {
   // Rebind functions if in different control mode
   if (current_control_mode == EVA) {
     buttonFunction[14] = buttonsFunctions::evaSprintFunc;
-    buttonFunction[15] = buttonsFunctions::evaJumpFunc;
-    buttonFunction[16] = buttonsFunctions::evaClimbFunc;
+    buttonFunction[19] = buttonsFunctions::evaJumpFunc;
+    buttonFunction[15] = buttonsFunctions::evaClimbFunc;
+    buttonFunction[20] = buttonsFunctions::evaBoardFunc;
+    buttonFunction[16] = buttonsFunctions::evaRcsFunc;
+    buttonFunction[21] = buttonsFunctions::evaConstrFunc;
     buttonFunction[17] = buttonsFunctions::evaIvaFunc;
-    buttonFunction[18] = buttonsFunctions::evaBoardFunc;
+    // buttonFunction[22] = buttonsFunctions::eva;
+    // buttonFunction[18] = buttonsFunctions::eva;
+    // buttonFunction[23] = buttonsFunctions::eva;
   }
 
   // For each button check if pressed and call function from buttonFunction array
@@ -1043,6 +1076,7 @@ void connectToKSP() {
   mySimpit.registerChannel(MANEUVER_MESSAGE);
   mySimpit.registerChannel(BURNTIME_MESSAGE);
   mySimpit.registerChannel(ATMO_CONDITIONS_MESSAGE);
+  
 }
 
 void messageHandler(byte messageType, byte msg[], byte msgSize) {
@@ -1147,6 +1181,7 @@ void convertMeters(float meters, char* output) {
     strcat(output, buffer);
     strcat(output, " Mm");
   }
+  output[7] = "\0"
 }
 
 void convertSecs(int32_t secs, char* output) {
@@ -1188,7 +1223,7 @@ void convertSecs(int32_t secs, char* output) {
     strcpy(output, buffer);
     strcat(output, " d");
   }
-  return output;
+  output[7] = "\0"
 }
 
 void convertSpeed(float speed, char* output) {
@@ -1206,6 +1241,7 @@ void convertSpeed(float speed, char* output) {
     strcpy(output, buffer);
     strcat(output, " km/s");
   }
+  output[13] = "\0"
 }
 
 namespace message {
@@ -1215,19 +1251,29 @@ namespace message {
     char buffer[21];
     strcat(output_message[0], "Apoapsis Info       "); // length 20
 
-    convertMeters(myApsides.apoapsis, buffer); // length 7
-    strcat(output_message[1], buffer);
-    strcat(output_message[1], "      "); // length 6
-    convertSecs(myApsidesTime.apoapsis, buffer); // length 7
-    strcat(output_message[1], buffer);
+    // If Apoapsis is less that 0 (undefined) then we're on escape trajectory
+    if (myApsides.apoapsis <= 0) {
+      strcat(output_message[1], "Escape Trajectory   "); // length 20
+    } else {
+      convertMeters(myApsides.apoapsis, buffer); // length 7
+      strcat(output_message[1], buffer);
+      strcat(output_message[1], "      "); // length 6
+      convertSecs(myApsidesTime.apoapsis, buffer); // length 7
+      strcat(output_message[1], buffer);
+    }
 
     strcat(output_message[2], "Periapsis Info      "); // length 20
-
-    convertMeters(myApsides.periapsis, buffer); // length 7
-    strcat(output_message[3], buffer);
-    strcat(output_message[3], "      "); // length 6
-    convertSecs(myApsidesTime.periapsis, buffer); // length 7
-    strcat(output_message[3], buffer);
+    
+    // If Periapsis is less than 0 then we're not in orbit and this value doesn't make sense
+    if (myApsides.periapsis <= 0) {
+      strcat(output_message[3], "Not in orbit        "); // length 20
+    } else {
+      convertMeters(myApsides.periapsis, buffer); // length 7
+      strcat(output_message[3], buffer);
+      strcat(output_message[3], "      "); // length 6
+      convertSecs(myApsidesTime.periapsis, buffer); // length 7
+      strcat(output_message[3], buffer);
+    }
   }
 
   void orbitInfo(char (*output_message)[COLS+1]) {
@@ -1264,12 +1310,13 @@ namespace message {
 
   void landingInfo(char (*output_message)[COLS+1]) {
     char buffer[21];
-    strcat(output_message[0], "Landing on          ");  // length 20
 
-    strcat(output_message[1], mySoi);
+    strcat(output_message[0], mySoi);
     for (int i = 0; i < (20 - strlen(mySoi)); i++) {
-      strcat(output_message[1], " ");
+      strcat(output_message[0], " ");
     }
+
+    strcat(output_message[1], "                    ");  // length 20
 
     strcat(output_message[2], "Surface Velocity    ");  // length 20
 
@@ -1318,7 +1365,7 @@ namespace message {
   void maneuverTimeInfo(char (*output_message)[COLS+1]) {
     char buffer[21];
     strcat(output_message[0], "Time to Maneuver    ");  // length 20
-
+    
     convertSecs(myManeuver.timeToNextManeuver, buffer);  // length 7
     strcat(output_message[1], buffer);
     strcat(output_message[1], "             "); // length 13
@@ -1572,13 +1619,13 @@ void loop() {
       sendTranslationCmd();
       break;
     case EVA:
-      sendJetpackCmd();
+      // sendJetpackCmd();
       sendMovementCmd();
       sendCameraCmd();
       break;
     case ROVER:
-      sendRotationCmd();
       sendWheelCmd();
+      sendCameraCmd();
       break;
     case PLANE:
       sendThrottleCmd();
