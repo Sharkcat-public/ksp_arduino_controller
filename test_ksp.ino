@@ -183,9 +183,10 @@ enum control_mode {
   PLANE
 };
 
-const int NUM_OF_DISPLAY_MODES = 5;
+const int NUM_OF_DISPLAY_MODES = 6;
 enum display_mode {
   ORBIT,
+  ANGLE,
   LANDING,
   TARGET,
   MANEUVER,
@@ -269,7 +270,7 @@ const int TIMEWARP_ARRIVAL_TIME = -45;
 const unsigned long DEBOUNCE_DELAY = 50; // Debounce delay in milliseconds
 const unsigned int LCD_UPDATE_INTERVAL = 500;  // LCD update frequency
 const unsigned int DEADZONE = 50; // Deadzone for Rotation, Translation, Throttle
-const unsigned int THROTTLE_DEADZONE = 75; // Deadzone for Throttle
+const unsigned int THROTTLE_DEADZONE = 90; // Deadzone for Throttle
 const unsigned int CAMERA_DEADZONE = 100; // Deadzone for camera movement
 const unsigned int JETPACK_DEADZONE = 200; // Deadzone for jetpack throttle
 const int CAMERA_SENSITIVITY = 128; // When it was INT16_MAX, it was way too fast
@@ -277,6 +278,8 @@ int16_t TRANSLATION_SENSITIVITY = INT16_MAX;
 const int16_t THROTTLE_SENSITIVITY = INT16_MAX;
 int16_t ROTATION_SENSITIVITY = INT16_MAX;
 const int16_t WHEEL_SENSITIVITY = INT16_MAX;
+const int16_t PRECISION_SENSITIVITY = 4096;
+const int16_t PLANE_SENSITIVITY = 16384;
 
 
 void sendThrottleCmd() {
@@ -619,8 +622,8 @@ namespace buttonsFunctions {
           mySimpit.printToKSP("ROTATION + TRANSLATION", PRINT_TO_SCREEN);
           break;
         case PRECISION:
-          TRANSLATION_SENSITIVITY = 4096;
-          ROTATION_SENSITIVITY = 4096;
+          TRANSLATION_SENSITIVITY = PRECISION_SENSITIVITY;
+          ROTATION_SENSITIVITY = PRECISION_SENSITIVITY;
           mySimpit.printToKSP("PRECISION", PRINT_TO_SCREEN);
           break;
         case EVA:
@@ -630,7 +633,7 @@ namespace buttonsFunctions {
           mySimpit.printToKSP("CAMERA + ROVER", PRINT_TO_SCREEN);
           break;
         case PLANE:
-          ROTATION_SENSITIVITY = 8192;
+          ROTATION_SENSITIVITY = PLANE_SENSITIVITY;
           mySimpit.printToKSP("PLANE", PRINT_TO_SCREEN);
           break;
       }
@@ -1172,7 +1175,7 @@ void convertMeters(float meters, char* output) {
     }
     strcat(output, buffer);
     strcat(output, " km");
-  } else {
+  } else if (intmeters < 10000000000) {
     char buffer[10];
     itoa(intmeters/1000000, buffer, 10);
     for (int i = 0; i < (4 - (length - 6)); i++) {
@@ -1180,11 +1183,19 @@ void convertMeters(float meters, char* output) {
     }
     strcat(output, buffer);
     strcat(output, " Mm");
+  } else {
+    char buffer[10];
+    itoa(intmeters/1000000000, buffer, 10);
+    for (int i = 0; i < (4 - (length - 9)); i++) {
+      strcat(output, " ");
+    }
+    strcat(output, buffer);
+    strcat(output, " Gm");
   }
-  output[7] = "\0"
+  output[8] = "\0";
 }
 
-void convertSecs(int32_t secs, char* output) {
+void convertSecs(int32_t secs, char* output, int16_t output_length = 7) {
   // converts int seconds into char[] of length 7 and puts it into output
   memset(output, 0, 21);
   int32_t tmpsecs = secs;
@@ -1209,21 +1220,26 @@ void convertSecs(int32_t secs, char* output) {
   // "-xx.x m" 7 chars
   } else if ((secs < 3600) && (secs > -3600)) {
     char buffer[10];
-    dtostrf((float)secs/60.0, -5, 1, buffer);
+    dtostrf((float)secs/60.0, -5, (output_length-6), buffer);
     strcpy(output, buffer);
     strcat(output, " m");
   } else if ((secs < 86400) && (secs > -86400)) {
     char buffer[10];
-    dtostrf((float)secs/3600.0, -5, 1, buffer);
+    dtostrf((float)secs/3600.0, -5, (output_length-6), buffer);
     strcpy(output, buffer);
     strcat(output, " h");
-  } else {
+  } else if ((secs < 63072000) && (secs > -63072000)) {
     char buffer[10];
-    dtostrf((float)secs/86400.0, -5, 1, buffer);
+    dtostrf((float)secs/86400.0, -5, (output_length-6), buffer);
     strcpy(output, buffer);
     strcat(output, " d");
+  } else {
+    char buffer[10];
+    dtostrf((float)secs/31536000.0, -5, (output_length-6), buffer);
+    strcpy(output, buffer);
+    strcat(output, " y");
   }
-  output[7] = "\0"
+  output[8] = "\0";
 }
 
 void convertSpeed(float speed, char* output) {
@@ -1241,7 +1257,7 @@ void convertSpeed(float speed, char* output) {
     strcpy(output, buffer);
     strcat(output, " km/s");
   }
-  output[13] = "\0"
+  output[13] = "\0";
 }
 
 namespace message {
@@ -1257,9 +1273,14 @@ namespace message {
     } else {
       convertMeters(myApsides.apoapsis, buffer); // length 7
       strcat(output_message[1], buffer);
-      strcat(output_message[1], "      "); // length 6
+      for(int i = 0; i < 10 - strlen(output_message[1]); i++) {
+        strcat(output_message[1], " "); // length to 10
+      }
       convertSecs(myApsidesTime.apoapsis, buffer); // length 7
       strcat(output_message[1], buffer);
+      for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
+        strcat(output_message[1], " "); // length to 20
+      }
     }
 
     strcat(output_message[2], "Periapsis Info      "); // length 20
@@ -1270,9 +1291,14 @@ namespace message {
     } else {
       convertMeters(myApsides.periapsis, buffer); // length 7
       strcat(output_message[3], buffer);
-      strcat(output_message[3], "      "); // length 6
+      for(int i = 0; i < 10 - strlen(output_message[3]); i++) {
+        strcat(output_message[3], " "); // length to 10
+      }
       convertSecs(myApsidesTime.periapsis, buffer); // length 7
       strcat(output_message[3], buffer);
+      for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
+        strcat(output_message[3], " "); // length to 20
+      }
     }
   }
 
@@ -1283,14 +1309,141 @@ namespace message {
     memset(&buffer, 0, sizeof(buffer));
     dtostrf(myOrbit.eccentricity, -8, 2, buffer); // length 8
     strcat(output_message[1], buffer);
-    strcat(output_message[1], "            "); // length 12
+    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
+      strcat(output_message[1], " "); // length to 20
+    }
     
     strcat(output_message[2], "Inclination         "); // length 20
 
     memset(&buffer, 0, sizeof(buffer));
     dtostrf(myOrbit.inclination, -8, 2, buffer); // length 8
     strcat(output_message[3], buffer);
-    strcat(output_message[3], "            "); // length 12
+    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
+      strcat(output_message[3], " "); // length to 20
+    }
+  }
+
+  float toRad(float x) {
+      return (x * 71) / 4068;
+  }
+
+  float toDeg(float x) {
+    return (x * 4068) / 71;
+  }
+
+  float trueToEccAnomaly(float trueAno, float ecc) {
+    return atan((sin(trueAno)*sqrt(1-(ecc*ecc)))/(cos(trueAno)+ecc));
+  }
+
+  float eccToMeanAnomaly(float eccAno, float ecc) {
+    return eccAno - (ecc * sin(eccAno));
+  }
+ 
+  void nodesInfo(char (*output_message)[COLS+1]) {
+    char buffer[21];
+
+    strcat(output_message[0], "Time to ascending  "); // length 20
+    strcat(output_message[2], "Time to descending "); // length 20
+
+    if (myOrbit.period <= 0) {
+      strcat(output_message[1], "Not in orbit       "); // length 20
+      strcat(output_message[3], "Not in orbit       "); // length 20
+      return;
+    }
+
+    // this works 60% of time, for some reason either asc or desc node is correct and other is usually incorrect
+    // from https://duncaneddy.github.io/rastro/user_guide/orbits/anomalies/
+    float argPeri = myOrbit.argPeriapsis;
+    if (argPeri < 0) {
+      argPeri += 360;
+    }
+    if (argPeri > 360) {
+      argPeri -= 360;
+    }
+    float trueAnoAsc = (2*PI) - toRad(argPeri);
+    float eccAnoAsc = trueToEccAnomaly(trueAnoAsc, myOrbit.eccentricity);
+    float meanAnoAsc = eccToMeanAnomaly(eccAnoAsc, myOrbit.eccentricity);
+    float angleToAsc = meanAnoAsc - myOrbit.meanAnomaly;
+    if (angleToAsc < 0) {
+      angleToAsc = (2*PI) + angleToAsc;
+    }
+
+    float trueAnoDesc = trueAnoAsc + PI;
+    if (trueAnoDesc > 2*PI) {
+      trueAnoDesc -= 2*PI;
+    }
+    float eccAnoDesc = trueToEccAnomaly(trueAnoDesc, myOrbit.eccentricity);
+    float meanAnoDesc = eccToMeanAnomaly(eccAnoDesc, myOrbit.eccentricity);
+    float angleToDesc = meanAnoDesc - myOrbit.meanAnomaly;
+    if (angleToDesc < 0) {
+      angleToDesc = (2*PI) + angleToDesc;
+    }
+
+    float timeToAscNode = 0;
+    float timeToDescNode = 0;
+    float angularVelocity = 2*PI/myOrbit.period;
+
+    timeToAscNode = angleToAsc/angularVelocity;
+    timeToDescNode = angleToDesc/angularVelocity;
+    if (timeToAscNode < 0) {
+      timeToAscNode += myOrbit.period;
+    }
+    if (timeToDescNode < 0) {
+      timeToDescNode += myOrbit.period;
+    }
+    
+    convertSecs(timeToAscNode, buffer, 8); // length 7
+    strcat(output_message[1], buffer);
+    strcat(output_message[1], " ");
+    memset(&buffer, 0, sizeof(buffer));
+    dtostrf(toDeg(trueAnoAsc), -8, 2, buffer); // length 8
+    strcat(output_message[1], buffer);
+    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
+      strcat(output_message[1], " "); // length to 20
+    }
+
+    convertSecs(timeToDescNode, buffer, 8); // length 8
+    strcat(output_message[3], buffer);
+    strcat(output_message[3], " ");
+    memset(&buffer, 0, sizeof(buffer));
+    dtostrf(toDeg(trueAnoDesc), -8, 2, buffer); // length 8
+    strcat(output_message[3], buffer);
+    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
+      strcat(output_message[3], " "); // length to 20
+    }
+  }
+
+  void angularInfo(char (*output_message)[COLS+1]) {
+    char buffer[21];
+    
+    strcat(output_message[0], "True Anomaly/Incl  "); // length 20
+    strcat(output_message[2], "Period of orbit    "); // length 20
+    float adjTrueAno = myOrbit.trueAnomaly;
+    if (adjTrueAno < 0) {
+      adjTrueAno += PI;
+    }
+
+    memset(&buffer, 0, sizeof(buffer));
+    dtostrf(toDeg(adjTrueAno), -9, 3, buffer); // length 9
+    strcat(output_message[1], buffer);
+    strcat(output_message[1], " "); // length 1
+    memset(&buffer, 0, sizeof(buffer));
+    dtostrf(myOrbit.inclination, -9, 3, buffer); // length 9
+    strcat(output_message[1], buffer);
+    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
+      strcat(output_message[1], " "); // length to 20
+    }
+
+    
+    convertSecs(myOrbit.period, buffer); // length 7
+    strcat(output_message[3], buffer);
+    strcat(output_message[3], " "); // length 1
+    memset(&buffer, 0, sizeof(buffer));
+    dtostrf(myOrbit.longAscendingNode, -9, 3, buffer); // length 9
+    strcat(output_message[3], buffer);
+    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
+      strcat(output_message[3], " "); // length to 20
+    }
   }
 
   void altitudeInfo(char (*output_message)[COLS+1]) {
@@ -1299,13 +1452,17 @@ namespace message {
 
     convertMeters(myAltitude.surface, buffer); // length 7
     strcat(output_message[1], buffer);
-    strcat(output_message[1], "             "); // length 13
+    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
+      strcat(output_message[1], " "); // length to 20
+    }
 
     strcat(output_message[2], "Sea level Altitude  ");  // length 20
 
     convertMeters(myAltitude.sealevel, buffer);  // length 7
     strcat(output_message[3], buffer);
-    strcat(output_message[3], "             "); // length 13
+    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
+      strcat(output_message[3], " "); // length to 20
+    }
   }
 
   void landingInfo(char (*output_message)[COLS+1]) {
@@ -1322,7 +1479,9 @@ namespace message {
 
     convertSpeed(myVelocity.surface, buffer); // length 13
     strcat(output_message[3], buffer);
-    strcat(output_message[3], "       "); // length 7
+    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
+        strcat(output_message[3], " "); // length to 20
+    }
     
   }
 
@@ -1332,13 +1491,17 @@ namespace message {
     
     convertMeters(myTarget.distance, buffer);  // length 7
     strcat(output_message[1], buffer);
-    strcat(output_message[1], "             ");  // length 13
+    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
+        strcat(output_message[1], " "); // length to 20
+    }
 
     strcat(output_message[2], "Target Velocity     ");  // length 20
 
     convertSpeed(myTarget.velocity,buffer); // length 13
     strcat(output_message[3], buffer);
-    strcat(output_message[3], "       ");  // length 7
+    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
+        strcat(output_message[3], " "); // length to 20
+    }
   }
 
   void targetDynamicsInfo(char (*output_message)[COLS+1]) {
@@ -1444,6 +1607,17 @@ void createLCDMessage(display_mode curr_display_mode, byte display_num, char (*o
           message::orbitInfo(output_message);
           break;
         }
+      break;
+
+    case ANGLE:
+      switch (display_num) {
+        case 0:
+          message::nodesInfo(output_message);
+          break;
+        case 1:
+          message::angularInfo(output_message);
+          break;
+      }
       break;
 
     case LANDING:
