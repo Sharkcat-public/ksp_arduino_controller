@@ -1331,7 +1331,19 @@ namespace message {
     return (x * 4068) / 71;
   }
 
+  // Calculates correct result, but only in 0-PI domain, so it loses info
+  // float trueToEccAnomalyTwo(float trueAno, float ecc) {
+  //   return atan((sin(trueAno)*sqrt(1-(ecc*ecc)))/(cos(trueAno)+ecc));
+  // }
+
+  // https://space.stackexchange.com/questions/58838/how-to-calculate-time-since-ascending-node-crossing
   float trueToEccAnomaly(float trueAno, float ecc) {
+    float res = acos((ecc+cos(trueAno))/((ecc*cos(trueAno))+1));
+    if (trueAno < PI) {
+      return res;
+    } else {
+      return (2*PI) - res;
+    }
     return atan((sin(trueAno)*sqrt(1-(ecc*ecc)))/(cos(trueAno)+ecc));
   }
 
@@ -1351,7 +1363,6 @@ namespace message {
       return;
     }
 
-    // this works 60% of time, for some reason either asc or desc node is correct and other is usually incorrect
     // from https://duncaneddy.github.io/rastro/user_guide/orbits/anomalies/
     float argPeri = myOrbit.argPeriapsis;
     if (argPeri < 0) {
@@ -1416,31 +1427,28 @@ namespace message {
   void angularInfo(char (*output_message)[COLS+1]) {
     char buffer[21];
     
-    strcat(output_message[0], "True Anomaly/Incl  "); // length 20
+    strcat(output_message[0], "Incl/True Anomaly  "); // length 20
     strcat(output_message[2], "Period of orbit    "); // length 20
     float adjTrueAno = myOrbit.trueAnomaly;
     if (adjTrueAno < 0) {
-      adjTrueAno += PI;
+      adjTrueAno += 2*PI;
     }
 
     memset(&buffer, 0, sizeof(buffer));
-    dtostrf(toDeg(adjTrueAno), -9, 3, buffer); // length 9
+    dtostrf(myOrbit.inclination, -9, 3, buffer); // length 9
     strcat(output_message[1], buffer);
     strcat(output_message[1], " "); // length 1
     memset(&buffer, 0, sizeof(buffer));
-    dtostrf(myOrbit.inclination, -9, 3, buffer); // length 9
+    dtostrf(toDeg(adjTrueAno), -9, 3, buffer); // length 9
     strcat(output_message[1], buffer);
     for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
       strcat(output_message[1], " "); // length to 20
     }
 
     
-    convertSecs(myOrbit.period, buffer); // length 7
+    convertSecs(myOrbit.period, buffer, 8); // length 7
     strcat(output_message[3], buffer);
     strcat(output_message[3], " "); // length 1
-    memset(&buffer, 0, sizeof(buffer));
-    dtostrf(myOrbit.longAscendingNode, -9, 3, buffer); // length 9
-    strcat(output_message[3], buffer);
     for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
       strcat(output_message[3], " "); // length to 20
     }
