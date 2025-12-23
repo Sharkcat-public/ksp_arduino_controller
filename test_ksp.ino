@@ -257,7 +257,7 @@ SASInfoMessage mySas;
 deltaVMessage myDeltaV;
 altitudeMessage myAltitude;
 velocityMessage myVelocity;
-char mySoi[21];
+char mySoi[COLS+1];
 targetMessage myTarget;
 orbitInfoMessage myOrbit;
 apsidesMessage myApsides;
@@ -1151,7 +1151,7 @@ void messageHandler(byte messageType, byte msg[], byte msgSize) {
 
 void convertMeters(float meters, char* output) {
   // convert float meters into char[] of length 7 and puts it into output
-  memset(output, 0, 21);
+  memset(output, 0, COLS+1);
   int32_t intmeters = meters;
   int length = 1;
   int32_t tmpmeters = intmeters;
@@ -1198,7 +1198,7 @@ void convertMeters(float meters, char* output) {
 
 void convertSecs(int32_t secs, char* output, int16_t output_length = 7) {
   // converts int seconds into char[] of length 7 and puts it into output
-  memset(output, 0, 21);
+  memset(output, 0, COLS+1);
   int32_t tmpsecs = secs;
   int length = 1;
   while (tmpsecs > 10) {
@@ -1245,7 +1245,7 @@ void convertSecs(int32_t secs, char* output, int16_t output_length = 7) {
 
 void convertSpeed(float speed, char* output) {
   // convert float m/s speed into char[] of length 13 and puts it into output
-  memset(output, 0, 21);
+  memset(output, 0, COLS+1);
   if (speed < 10000.0) {
     char buffer[14];
     dtostrf(speed, -8, 2, buffer);
@@ -1265,12 +1265,12 @@ namespace message {
   // functions to populate output_message[ROWS][COLS+1] with KSP info
 
   void apsidesInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
-    strcat(output_message[0], "Apoapsis Info"); // length 20
+    char buffer[COLS+1];
+    strcat(output_message[0], "Apoapsis Info");
 
     // If Apoapsis is less that 0 (undefined) then we're on escape trajectory
     if (myApsides.apoapsis <= 0) {
-      strcat(output_message[1], "Escape Trajectory"); // length 20
+      strcat(output_message[1], "Escape Trajectory");
     } else {
       convertMeters(myApsides.apoapsis, buffer); // length 7
       strcat(output_message[1], buffer);
@@ -1279,16 +1279,13 @@ namespace message {
       }
       convertSecs(myApsidesTime.apoapsis, buffer); // length 7
       strcat(output_message[1], buffer);
-      for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
-        strcat(output_message[1], " "); // length to 20
-      }
     }
 
-    strcat(output_message[2], "Periapsis Info"); // length 20
+    strcat(output_message[2], "Periapsis Info");
     
     // If Periapsis is less than 0 then we're not in orbit and this value doesn't make sense
     if (myApsides.periapsis <= 0) {
-      strcat(output_message[3], "Not in orbit"); // length 20
+      strcat(output_message[3], "Not in orbit");
     } else {
       convertMeters(myApsides.periapsis, buffer); // length 7
       strcat(output_message[3], buffer);
@@ -1297,31 +1294,22 @@ namespace message {
       }
       convertSecs(myApsidesTime.periapsis, buffer); // length 7
       strcat(output_message[3], buffer);
-      for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
-        strcat(output_message[3], " "); // length to 20
-      }
     }
   }
 
   void orbitInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
-    strcat(output_message[0], "Eccentricity        "); // length 20
+    char buffer[COLS+1];
+    strcat(output_message[0], "Eccentricity");
 
     memset(&buffer, 0, sizeof(buffer));
     dtostrf(myOrbit.eccentricity, -8, 2, buffer); // length 8
     strcat(output_message[1], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
-      strcat(output_message[1], " "); // length to 20
-    }
     
-    strcat(output_message[2], "Inclination         "); // length 20
+    strcat(output_message[2], "Inclination");
 
     memset(&buffer, 0, sizeof(buffer));
     dtostrf(myOrbit.inclination, -8, 2, buffer); // length 8
     strcat(output_message[3], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
-      strcat(output_message[3], " "); // length to 20
-    }
   }
 
   float toRad(float x) {
@@ -1353,14 +1341,14 @@ namespace message {
   }
  
   void nodesInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
+    char buffer[COLS+1];
 
-    strcat(output_message[0], "Time to ascending  "); // length 20
-    strcat(output_message[2], "Time to descending "); // length 20
+    strcat(output_message[0], "Time to ascending");
+    strcat(output_message[2], "Time to descending");
 
     if (myOrbit.period <= 0) {
-      strcat(output_message[1], "Not in orbit       "); // length 20
-      strcat(output_message[3], "Not in orbit       "); // length 20
+      strcat(output_message[1], "Not in orbit");
+      strcat(output_message[3], "Not in orbit");
       return;
     }
 
@@ -1410,9 +1398,6 @@ namespace message {
     memset(&buffer, 0, sizeof(buffer));
     dtostrf(toDeg(trueAnoAsc), -8, 2, buffer); // length 8
     strcat(output_message[1], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
-      strcat(output_message[1], " "); // length to 20
-    }
 
     convertSecs(timeToDescNode, buffer, 8); // length 8
     strcat(output_message[3], buffer);
@@ -1420,16 +1405,13 @@ namespace message {
     memset(&buffer, 0, sizeof(buffer));
     dtostrf(toDeg(trueAnoDesc), -8, 2, buffer); // length 8
     strcat(output_message[3], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
-      strcat(output_message[3], " "); // length to 20
-    }
   }
 
   void angularInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
+    char buffer[COLS+1];
     
-    strcat(output_message[0], "Incl/True Anomaly  "); // length 20
-    strcat(output_message[2], "Period of orbit    "); // length 20
+    strcat(output_message[0], "Incl/True Anomaly");
+    strcat(output_message[2], "Period of orbit");
     float adjTrueAno = myOrbit.trueAnomaly;
     if (adjTrueAno < 0) {
       adjTrueAno += 2*PI;
@@ -1442,80 +1424,53 @@ namespace message {
     memset(&buffer, 0, sizeof(buffer));
     dtostrf(toDeg(adjTrueAno), -9, 3, buffer); // length 9
     strcat(output_message[1], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
-      strcat(output_message[1], " "); // length to 20
-    }
 
     
     convertSecs(myOrbit.period, buffer, 8); // length 7
     strcat(output_message[3], buffer);
-    strcat(output_message[3], " "); // length 1
-    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
-      strcat(output_message[3], " "); // length to 20
-    }
   }
 
   void altitudeInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
-    strcat(output_message[0], "Surface Altitude    ");  // length 20
+    char buffer[COLS+1];
+    strcat(output_message[0], "Surface Altitude");
 
     convertMeters(myAltitude.surface, buffer); // length 7
     strcat(output_message[1], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
-      strcat(output_message[1], " "); // length to 20
-    }
 
-    strcat(output_message[2], "Sea level Altitude  ");  // length 20
+    strcat(output_message[2], "Sea level Altitude");
 
     convertMeters(myAltitude.sealevel, buffer);  // length 7
     strcat(output_message[3], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
-      strcat(output_message[3], " "); // length to 20
-    }
   }
 
   void landingInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
+    char buffer[COLS+1];
 
     strcat(output_message[0], mySoi);
-    for (int i = 0; i < (20 - strlen(mySoi)); i++) {
-      strcat(output_message[0], " ");
-    }
 
-    strcat(output_message[1], "                    ");  // length 20
-
-    strcat(output_message[2], "Surface Velocity    ");  // length 20
+    strcat(output_message[2], "Surface Velocity");
 
     convertSpeed(myVelocity.surface, buffer); // length 13
     strcat(output_message[3], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
-        strcat(output_message[3], " "); // length to 20
-    }
     
   }
 
   void targetInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
-    strcat(output_message[0], "Target Distance     ");  // length 20
+    char buffer[COLS+1];
+    strcat(output_message[0], "Target Distance");
     
     convertMeters(myTarget.distance, buffer);  // length 7
     strcat(output_message[1], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[1]); i++) {
-        strcat(output_message[1], " "); // length to 20
-    }
 
-    strcat(output_message[2], "Target Velocity     ");  // length 20
+    strcat(output_message[2], "Target Velocity");
 
     convertSpeed(myTarget.velocity,buffer); // length 13
     strcat(output_message[3], buffer);
-    for(int i = 0; i < 20 - strlen(output_message[3]); i++) {
-        strcat(output_message[3], " "); // length to 20
-    }
   }
 
   void targetDynamicsInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
-    strcat(output_message[0], "Target Heading      ");  // length 20
+    char buffer[COLS+1];
+    strcat(output_message[0], "Target Heading");
     
     memset(&buffer, 0, sizeof(buffer));
     dtostrf(myTarget.heading, -6, 1, buffer); // length 6
@@ -1524,7 +1479,7 @@ namespace message {
     convertSpeed(myTarget.velocityHeading, buffer); // length 13
     strcat(output_message[1], buffer);
 
-    strcat(output_message[2], "Target Pitch        ");  // length 20
+    strcat(output_message[2], "Target Pitch");
     
     memset(&buffer, 0, sizeof(buffer));
     dtostrf(myTarget.pitch, -6, 1, buffer); // length 6
@@ -1535,111 +1490,103 @@ namespace message {
   }
 
   void maneuverTimeInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
-    strcat(output_message[0], "Time to Maneuver    ");  // length 20
+    char buffer[COLS+1];
+    strcat(output_message[0], "Time to Maneuver");
     
     convertSecs(myManeuver.timeToNextManeuver, buffer);  // length 7
     strcat(output_message[1], buffer);
-    strcat(output_message[1], "             "); // length 13
 
-    strcat(output_message[2], "Maneuver Duration   ");  // length 20
+    strcat(output_message[2], "Maneuver Duration");
 
     convertSecs(myManeuver.durationNextManeuver, buffer);  // length 7
     strcat(output_message[3], buffer);
-    strcat(output_message[3], "             "); // length 13
   }
 
   void maneuverDeltaVInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
-    strcat(output_message[0], "Maneuver dV         ");  // length 20
+    char buffer[COLS+1];
+    strcat(output_message[0], "Maneuver dV");
     output_message[0][9] = 1; // delta char
 
     convertSpeed(myManeuver.deltaVNextManeuver, buffer); // length 13
     strcat(output_message[1], buffer);
-    strcat(output_message[1], "       "); // length 7
 
-    strcat(output_message[2], "Current stage dV    ");  // length 20
+    strcat(output_message[2], "Current stage dV");
     output_message[2][14] = 1; // delta char
 
     convertSpeed(myDeltaV.stageDeltaV, buffer); // length 13
     strcat(output_message[3], buffer);
-    strcat(output_message[3], "       "); // length 7    
   }
 
   void deltaVInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
-    strcat(output_message[0], "Current stage dV    ");  // length 20
+    char buffer[COLS+1];
+    strcat(output_message[0], "Current stage dV");
     output_message[0][14] = 1; // delta char
 
     convertSpeed(myDeltaV.stageDeltaV, buffer); // length 13
     strcat(output_message[1], buffer);
-    strcat(output_message[1], "       "); // length 7
 
-    strcat(output_message[2], "Total dV            ");  // length 20
+    strcat(output_message[2], "Total dV");
     output_message[2][6] = 1; // delta char
 
     convertSpeed(myDeltaV.totalDeltaV, buffer); // length 13
     strcat(output_message[3], buffer);
-    strcat(output_message[3], "       "); // length 7
   }
 
   void burnTimeInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
-    strcat(output_message[0], "Stage Burn Time     "); // length 20
+    char buffer[COLS+1];
+    strcat(output_message[0], "Stage Burn Time");
 
     convertSecs(myBurnTime.stageBurnTime, buffer); // length 7
     strcat(output_message[1], buffer);
-    strcat(output_message[1], "             "); // length 13
 
-    strcat(output_message[2], "Total Burn Time     "); // length 20
+    strcat(output_message[2], "Total Burn Time");
 
     convertSecs(myBurnTime.totalBurnTime, buffer); // length 7
     strcat(output_message[3], buffer);
-    strcat(output_message[3], "             "); // length 13
   }
 
   void buttonsSwitchesDebugInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
+    char buffer[COLS+1];
     strcat(output_message[0], "Buttons & Switches"); // length 18
 
     for(int i = 0; i < 4; i++) { // Main buttons upper
-      memset(buffer, 0, 21);
+      memset(buffer, 0, COLS+1);
       itoa(lastButtonState[i], buffer, 10);
       strcat(output_message[1], buffer); // length 4
     }
     strcat(output_message[1], " "); // length 1
     for(int i = 4; i < 8; i++) { // Main buttons lower
-      memset(buffer, 0, 21);
+      memset(buffer, 0, COLS+1);
       itoa(lastButtonState[i], buffer, 10);
       strcat(output_message[1], buffer); // length 4
     }
     strcat(output_message[1], " "); // length 1
     for(int i = 8; i < 14; i++) { // Time control buttons
-      memset(buffer, 0, 21);
+      memset(buffer, 0, COLS+1);
       itoa(lastButtonState[i], buffer, 10);
       strcat(output_message[1], buffer); // length 6
     }
 
     for(int i = 14; i < 19; i++) { // Action buttons upper
-      memset(buffer, 0, 21);
+      memset(buffer, 0, COLS+1);
       itoa(lastButtonState[i], buffer, 10);
       strcat(output_message[2], buffer); // length 5
     }
     strcat(output_message[2], " "); // length 1
     for(int i = 19; i < 24; i++) { // Action buttons lower
-      memset(buffer, 0, 21);
+      memset(buffer, 0, COLS+1);
       itoa(lastButtonState[i], buffer, 10);
       strcat(output_message[2], buffer); // length 5
     }
     strcat(output_message[2], " "); // length 1
     for(int i = 24; i < 26; i++) { // Display buttons
-      memset(buffer, 0, 21);
+      memset(buffer, 0, COLS+1);
       itoa(lastButtonState[i], buffer, 10);
       strcat(output_message[2], buffer); // length 2
     }
 
     for(int i = 0; i < 5; i++) { // Switches
-      memset(buffer, 0, 21);
+      memset(buffer, 0, COLS+1);
       itoa(lastSwitchState[i], buffer, 10);
       strcat(output_message[3], buffer); // length 5
     }
@@ -1647,7 +1594,7 @@ namespace message {
   }
 
   void potentiometersDebugInfo(char (*output_message)[COLS+1]) {
-    char buffer[21];
+    char buffer[COLS+1];
 
     strcat(output_message[0], "pot1: "); // length 5
     int readings[3] = {0,0,0};
@@ -1655,7 +1602,7 @@ namespace message {
     readings[1] = analogRead(TRANSLATE_YAW_PIN);
     readings[2] = analogRead(TRANSLATE_ROLL_PIN);
     for(int i = 0; i < 3; i++) {
-      memset(buffer, 0, 21);
+      memset(buffer, 0, COLS+1);
       itoa(readings[i], buffer, 10);
       strcat(output_message[0], buffer);
       strcat(output_message[0], " ");
@@ -1666,7 +1613,7 @@ namespace message {
     readings[1] = analogRead(YAW_PIN);
     readings[2] = analogRead(ROLL_PIN);
     for(int i = 0; i < 3; i++) {
-      memset(buffer, 0, 21);
+      memset(buffer, 0, COLS+1);
       itoa(readings[i], buffer, 10);
       strcat(output_message[1], buffer);
       strcat(output_message[1], " ");
@@ -1674,13 +1621,13 @@ namespace message {
 
     strcat(output_message[2], "SAS pot: "); // length 9
     int reading = analogRead(SAS_POT_PIN);
-    memset(buffer, 0, 21);
+    memset(buffer, 0, COLS+1);
     itoa(reading, buffer, 10);
     strcat(output_message[2], buffer);
 
     strcat(output_message[3], "Throttle pot: ");
     reading = analogRead(THROTTLE_PIN);
-    memset(buffer, 0, 21);
+    memset(buffer, 0, COLS+1);
     itoa(reading, buffer, 10);
     strcat(output_message[3], buffer);
 
@@ -1778,7 +1725,7 @@ void createLCDMessage(display_mode curr_display_mode, byte display_num, char (*o
     for (int j = strlen(output_message[i]); j < COLS; j++) {
       strcat(output_message[i], " ");
     }
-    output_message[i][20] = "\0";
+    output_message[i][COLS] = "\0";
   }
 }
 
