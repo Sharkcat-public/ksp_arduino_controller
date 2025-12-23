@@ -183,14 +183,15 @@ enum control_mode {
   PLANE
 };
 
-const int NUM_OF_DISPLAY_MODES = 6;
+const int NUM_OF_DISPLAY_MODES = 7;
 enum display_mode {
   ORBIT,
   ANGLE,
   LANDING,
   TARGET,
   MANEUVER,
-  DELTAV
+  DELTAV,
+  DEBUG
 };
 
 // Vars for current mode settings
@@ -1596,6 +1597,109 @@ namespace message {
     strcat(output_message[3], buffer);
     strcat(output_message[3], "             "); // length 13
   }
+
+  void buttonsSwitchesDebugInfo(char (*output_message)[COLS+1]) {
+    char buffer[21];
+    strcat(output_message[0], "Buttons & Switches  "); // length 20
+
+    for(int i = 0; i < 4; i++) { // Main buttons upper
+      memset(buffer, 0, 21);
+      itoa(lastButtonState[i], buffer, 10);
+      strcat(output_message[1], buffer); // length 4
+    }
+    strcat(output_message[1], " "); // length 1
+    for(int i = 4; i < 8; i++) { // Main buttons lower
+      memset(buffer, 0, 21);
+      itoa(lastButtonState[i], buffer, 10);
+      strcat(output_message[1], buffer); // length 4
+    }
+    strcat(output_message[1], " "); // length 1
+    for(int i = 8; i < 14; i++) { // Time control buttons
+      memset(buffer, 0, 21);
+      itoa(lastButtonState[i], buffer, 10);
+      strcat(output_message[1], buffer); // length 6
+    }
+    strcat(output_message[1], "    "); // length 4
+
+    for(int i = 14; i < 19; i++) { // Action buttons upper
+      memset(buffer, 0, 21);
+      itoa(lastButtonState[i], buffer, 10);
+      strcat(output_message[2], buffer); // length 5
+    }
+    strcat(output_message[2], " "); // length 1
+    for(int i = 19; i < 24; i++) { // Action buttons lower
+      memset(buffer, 0, 21);
+      itoa(lastButtonState[i], buffer, 10);
+      strcat(output_message[2], buffer); // length 5
+    }
+    strcat(output_message[2], " "); // length 1
+    for(int i = 24; i < 26; i++) { // Display buttons
+      memset(buffer, 0, 21);
+      itoa(lastButtonState[i], buffer, 10);
+      strcat(output_message[2], buffer); // length 2
+    }
+    strcat(output_message[2], "      "); // length 6
+
+    for(int i = 0; i < 5; i++) { // Switches
+      memset(buffer, 0, 21);
+      itoa(lastSwitchState[i], buffer, 10);
+      strcat(output_message[3], buffer); // length 5
+    }
+    strcat(output_message[3], "               "); // length 15
+
+  }
+
+  void potentiometersDebugInfo(char (*output_message)[COLS+1]) {
+    char buffer[21];
+
+    strcat(output_message[0], "pot1: "); // length 5
+    int readings[3] = {0,0,0};
+    readings[0] = analogRead(TRANSLATE_PITCH_PIN);
+    readings[1] = analogRead(TRANSLATE_YAW_PIN);
+    readings[2] = analogRead(TRANSLATE_ROLL_PIN);
+    for(int i = 0; i < 3; i++) {
+      memset(buffer, 0, 21);
+      itoa(readings[i], buffer, 10);
+      strcat(output_message[0], buffer);
+      strcat(output_message[0], " ");
+    }
+    for(int i = strlen(output_message[0]); i < 20; i++) {
+      strcat(output_message[0], " ");
+    }
+
+    strcat(output_message[1], "pot2: "); // length 5
+    readings[0] = analogRead(PITCH_PIN);
+    readings[1] = analogRead(YAW_PIN);
+    readings[2] = analogRead(ROLL_PIN);
+    for(int i = 0; i < 3; i++) {
+      memset(buffer, 0, 21);
+      itoa(readings[i], buffer, 10);
+      strcat(output_message[1], buffer);
+      strcat(output_message[1], " ");
+    }
+    for(int i = strlen(output_message[1]); i < 20; i++) {
+      strcat(output_message[1], " ");
+    }
+
+    strcat(output_message[2], "SAS pot: "); // length 9
+    int reading = analogRead(SAS_POT_PIN);
+    memset(buffer, 0, 21);
+    itoa(reading, buffer, 10);
+    strcat(output_message[2], buffer);
+    for(int i = strlen(output_message[2]); i < 20; i++) {
+      strcat(output_message[2], " ");
+    }
+
+    strcat(output_message[3], "Throttle pot: ");
+    reading = analogRead(THROTTLE_PIN);
+    memset(buffer, 0, 21);
+    itoa(reading, buffer, 10);
+    strcat(output_message[3], buffer);
+    for(int i = strlen(output_message[3]); i < 20; i++) {
+      strcat(output_message[3], " ");
+    }
+
+  }
 }
 
 void createLCDMessage(display_mode curr_display_mode, byte display_num, char (*output_message)[COLS+1]) {
@@ -1668,6 +1772,17 @@ void createLCDMessage(display_mode curr_display_mode, byte display_num, char (*o
           break;
         case 1:
           message::burnTimeInfo(output_message);
+          break;
+        }
+      break;
+
+    case DEBUG:
+      switch (display_num) {
+        case 0:
+          message::buttonsSwitchesDebugInfo(output_message);
+          break;
+        case 1:
+          message::potentiometersDebugInfo(output_message);
           break;
         }
       break;
