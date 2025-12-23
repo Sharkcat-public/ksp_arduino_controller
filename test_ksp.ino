@@ -1266,11 +1266,11 @@ namespace message {
 
   void apsidesInfo(char (*output_message)[COLS+1]) {
     char buffer[21];
-    strcat(output_message[0], "Apoapsis Info       "); // length 20
+    strcat(output_message[0], "Apoapsis Info"); // length 20
 
     // If Apoapsis is less that 0 (undefined) then we're on escape trajectory
     if (myApsides.apoapsis <= 0) {
-      strcat(output_message[1], "Escape Trajectory   "); // length 20
+      strcat(output_message[1], "Escape Trajectory"); // length 20
     } else {
       convertMeters(myApsides.apoapsis, buffer); // length 7
       strcat(output_message[1], buffer);
@@ -1284,11 +1284,11 @@ namespace message {
       }
     }
 
-    strcat(output_message[2], "Periapsis Info      "); // length 20
+    strcat(output_message[2], "Periapsis Info"); // length 20
     
     // If Periapsis is less than 0 then we're not in orbit and this value doesn't make sense
     if (myApsides.periapsis <= 0) {
-      strcat(output_message[3], "Not in orbit        "); // length 20
+      strcat(output_message[3], "Not in orbit"); // length 20
     } else {
       convertMeters(myApsides.periapsis, buffer); // length 7
       strcat(output_message[3], buffer);
@@ -1600,7 +1600,7 @@ namespace message {
 
   void buttonsSwitchesDebugInfo(char (*output_message)[COLS+1]) {
     char buffer[21];
-    strcat(output_message[0], "Buttons & Switches  "); // length 20
+    strcat(output_message[0], "Buttons & Switches"); // length 18
 
     for(int i = 0; i < 4; i++) { // Main buttons upper
       memset(buffer, 0, 21);
@@ -1619,7 +1619,6 @@ namespace message {
       itoa(lastButtonState[i], buffer, 10);
       strcat(output_message[1], buffer); // length 6
     }
-    strcat(output_message[1], "    "); // length 4
 
     for(int i = 14; i < 19; i++) { // Action buttons upper
       memset(buffer, 0, 21);
@@ -1638,14 +1637,12 @@ namespace message {
       itoa(lastButtonState[i], buffer, 10);
       strcat(output_message[2], buffer); // length 2
     }
-    strcat(output_message[2], "      "); // length 6
 
     for(int i = 0; i < 5; i++) { // Switches
       memset(buffer, 0, 21);
       itoa(lastSwitchState[i], buffer, 10);
       strcat(output_message[3], buffer); // length 5
     }
-    strcat(output_message[3], "               "); // length 15
 
   }
 
@@ -1663,9 +1660,6 @@ namespace message {
       strcat(output_message[0], buffer);
       strcat(output_message[0], " ");
     }
-    for(int i = strlen(output_message[0]); i < 20; i++) {
-      strcat(output_message[0], " ");
-    }
 
     strcat(output_message[1], "pot2: "); // length 5
     readings[0] = analogRead(PITCH_PIN);
@@ -1677,27 +1671,18 @@ namespace message {
       strcat(output_message[1], buffer);
       strcat(output_message[1], " ");
     }
-    for(int i = strlen(output_message[1]); i < 20; i++) {
-      strcat(output_message[1], " ");
-    }
 
     strcat(output_message[2], "SAS pot: "); // length 9
     int reading = analogRead(SAS_POT_PIN);
     memset(buffer, 0, 21);
     itoa(reading, buffer, 10);
     strcat(output_message[2], buffer);
-    for(int i = strlen(output_message[2]); i < 20; i++) {
-      strcat(output_message[2], " ");
-    }
 
     strcat(output_message[3], "Throttle pot: ");
     reading = analogRead(THROTTLE_PIN);
     memset(buffer, 0, 21);
     itoa(reading, buffer, 10);
     strcat(output_message[3], buffer);
-    for(int i = strlen(output_message[3]); i < 20; i++) {
-      strcat(output_message[3], " ");
-    }
 
   }
 }
@@ -1787,6 +1772,13 @@ void createLCDMessage(display_mode curr_display_mode, byte display_num, char (*o
         }
       break;
 
+  }
+
+  for (byte i = 0; i < ROWS; i++) {
+    for (int j = strlen(output_message[i]); j < COLS; j++) {
+      strcat(output_message[i], " ");
+    }
+    output_message[i][20] = "\0";
   }
 }
 
